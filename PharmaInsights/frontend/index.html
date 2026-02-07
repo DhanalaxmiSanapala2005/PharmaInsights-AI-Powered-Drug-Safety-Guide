@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PharmaInsights – AI Drug Safety Platform</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: linear-gradient(120deg, #e0f7fa, #e3f2fd);
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .card {
+      background: #ffffff;
+      width: 450px;
+      padding: 30px;
+      border-radius: 14px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+
+    h1 {
+      color: #1976d2;
+      margin-bottom: 5px;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: #555;
+      margin-bottom: 20px;
+    }
+
+    .upload-box {
+      border: 2px dashed #90caf9;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+    }
+
+    input[type="file"] {
+      margin-top: 10px;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(90deg, #1976d2, #42a5f5);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    #aiSteps {
+      display: none;
+      margin-top: 20px;
+      text-align: left;
+      font-size: 14px;
+      color: #555;
+    }
+
+    .result {
+      display: none;
+      margin-top: 25px;
+      background: #f9fcff;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: left;
+      font-size: 15px;
+    }
+
+    .high { color: red; font-weight: bold; }
+    .moderate { color: orange; font-weight: bold; }
+    .safe { color: green; font-weight: bold; }
+
+    .footer {
+      margin-top: 20px;
+      font-size: 12px;
+      color: #777;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="card">
+    <h1>PharmaInsights</h1>
+    <div class="subtitle">AI-Powered Drug Safety Analysis</div>
+
+    <div class="upload-box">
+      <b>Upload Medicine Label</b><br>
+      <input type="file" id="image">
+    </div>
+
+    <button onclick="upload()">Generate AI Safety Report</button>
+
+    <!-- AI Steps -->
+    <div id="aiSteps">
+      🤖 <b>AI Analysis in Progress</b>
+      <ul>
+        <li>✔ Extracting text using OCR</li>
+        <li>✔ Identifying drug using NLP</li>
+        <li>✔ Predicting risk using ML model</li>
+      </ul>
+    </div>
+
+    <!-- Result -->
+    <div id="result" class="result"></div>
+
+    <div class="footer">
+      Powered by OCR, NLP & Machine Learning<br>
+      ⚠ Not a substitute for medical advice
+    </div>
+  </div>
+
+<script>
+function upload() {
+
+  const fileInput = document.getElementById("image");
+  const file = fileInput.files[0];
+
+  if (!file) {
+    alert("Please upload a medicine image");
+    return;
+  }
+
+  document.getElementById("aiSteps").style.display = "block";
+  document.getElementById("result").style.display = "none";
+
+  const formData = new FormData();
+  formData.append("image", file);
+
+  fetch("http://127.0.0.1:5000/predict", {
+    method: "POST",
+    body: formData
+  })
+  .then(res => res.json())
+  .then(data => {
+
+    document.getElementById("aiSteps").style.display = "none";
+    document.getElementById("result").style.display = "block";
+
+    let riskClass = "safe";
+    if (data.risk.includes("High")) riskClass = "high";
+    else if (data.risk.includes("Moderate")) riskClass = "moderate";
+
+    document.getElementById("result").innerHTML = `
+      <h3>📄 AI Drug Safety Report</h3>
+      <p><b>Drug Name:</b> ${data.drug}</p>
+      <p><b>Risk Level:</b> <span class="${riskClass}">${data.risk}</span></p>
+      <p><b>Potential Side Effects:</b> ${data.side_effects}</p>
+      <p><b>AI Confidence:</b> ${data.confidence}%</p>
+    `;
+  })
+  .catch(err => {
+    console.error(err);
+    alert("Error connecting to backend");
+  });
+}
+</script>
+
+</body>
+</html>
